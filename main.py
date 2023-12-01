@@ -1,3 +1,4 @@
+import math
 import webbrowser
 import networkx as nx
 import numpy
@@ -5,11 +6,15 @@ from pyvis.network import Network
 import matplotlib.pyplot as plt
 
 
-def readNodes(fileName):
+def readNodes(fileName, skipFirstLine=True):
     arr = []
 
     file = open(fileName)
-    file.readline()
+
+    # Skips first line if it's not a point
+    if(skipFirstLine):
+        file.readline()
+
     for line in file:
         a, b = line.split()
         a = int(a)
@@ -24,29 +29,44 @@ def getDist(a, b):
     # Message to show getDist step in compute_graph
     print(f"getDist :: a = {a} | b = {b}")
     # grab one of the y's and one of the x's
-    return numpy.hypot(a[0], b[1])
+    return math.dist(a, b)
+
 
 def compute_graph(nodes):
     # Store the graph with the distances. This is really an adjacency matrix (2D array)
     # Set up adjacency matrix dimensions, square matrix len(nodes) by len(nodes)
-    rows, cols = (len(nodes), len(nodes))
+    nodeCount = len(nodes)
     # Initialize with 0 for sentinel
-    adj_mat = [[0] * cols] * rows
+    adj_mat = [[0 for i in range(nodeCount)] for j in range(nodeCount)]
     # method 2 1st approach
     # Store nodeCount instead of recalculating len(nodes) every loop
-    nodeCount = len(nodes)
+
     for i in range(nodeCount):
         for j in range(nodeCount):
-            adj_mat[i][j] = getDist(nodes[i], nodes[j])
+            # Don't calculate repeated distances
+            if(adj_mat[i][j] != 0):
+                continue
+            # Calculate value once for each node.
+            distance = getDist(nodes[i], nodes[j])
+            adj_mat[i][j] = distance
+            adj_mat[j][i] = distance
             # Message to clarify distance calculation per-step after getDist
             print(f"compute_graph :: Distance between Node {i} {nodes[i]} and Node {j} {nodes[j]} = {adj_mat[i][j]}")
+            print('--'*100)
     return adj_mat
 
 
 nodes = readNodes("tsp_14.txt")
 # "tsp_14.txt"
 
-print(compute_graph(nodes))
+graph = (compute_graph(nodes))
+print('==='*100)
+
+for i in range(len(graph)):
+    for j in range(len(graph)):
+        print("{0}".format(graph[i][j]), end='\t')
+    print()
+    print()
 
 
 
